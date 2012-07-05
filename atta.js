@@ -1,4 +1,3 @@
-// http://www.quirksmode.org/js/keys.html
 /**
  * atta(b completion)
  * usage:
