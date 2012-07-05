@@ -25,10 +25,11 @@ function ($) {
      var self = this
       , options = options || {}
       , keys = {
-          'up':38
-          , 'down':40
-          , 'escape':27
+          'up': 38
+          , 'down': 40
+          , 'escape': 27
           , 'enter': 13
+          , 'tab': 9
       }
       , styles = [
           '#atta-list-container { position:relative; top: 0px; left: 5px; }'
@@ -38,7 +39,7 @@ function ($) {
           , '#atta-list li.sel { background:#1DCAFF; color:#fff; }' ]
       , completions = options.completions || defaults.completions
       , at = options.at || defaults.at
-      , newList = function (ta) {
+      , newList = function () {
           return $("<div id='atta-list-container'><div id='atta-list'><ul></ul></div></div>");
       }
       , newItem = function (name, i) {
@@ -51,17 +52,21 @@ function ($) {
       , cancelKey = function (e) { return key(e, 'escape'); }
       , acceptKey = function (e) { return key(e, 'enter'); }
       , upKey = function (e) { return key(e, 'up'); }
-      , downKey = function (e) { return key(e, 'down'); } 
-      , showOptions = function (ta) {
+      , downKey = function (e) { return key(e, 'down'); }
+      , tabKey = function (e) { return key(e, 'tab'); }
+      , buildMarkup = function (cs) {
           var current = $("#atta-list-container")
-          , markup = current.length > 0 && current || newList(ta)
-          , cs = (completions() || [])
+          , markup = current.length > 0 && current || newList()
+          , ul = markup.find('ul')
           , buff = [];
           for(var i = 0, l = cs.length;i < l;i++) {
               buff.push(newItem(cs[i], i));
           }
-          var l = markup.find('ul')
-          l.empty().append(buff.join(''));
+          ul.empty().append(buff.join(''));
+          return markup;
+      }
+      , showOptions = function (ta) {
+          var markup = buildMarkup(completions() || []);
           $(window).on('keyup', function (e) {
               var sel = $("#atta-list li.sel")
               , kids = $(sel.parent()).children()
@@ -123,7 +128,7 @@ function ($) {
               } else {
                   var container = $("#atta-list-container");
                   if (container.length > 0) {
-                      var txt = el.val(), query, matching, filteredNames;
+                      var txt = el.val(), query, matching, filteredCompletions;
                       if (txt.length > 0) {
                           var lastAt = txt.lastIndexOf(at.char);
                           if (lastAt != -1) {
