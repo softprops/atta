@@ -5,11 +5,21 @@ function ($) {
       completions: function() {
           return $("#rsvp-list a.mem-name").
               map(function (i, a) { return a.text; }).sort();
+      },
+      at : {
+          is: function(e){
+              return  String.fromCharCode(e.which || e.keyCode) === "2" && e.shiftKey
+          }
+          , char : '@'
       }
   };
   /**
-   * options is an object which may contain one of
+   * options is an object which may contain one of:
    * completions - a function which returns a list of completion options
+   * at - an object representing the at trigger for tab completion.
+   *      this object should contain a function, 'is', which should accept a key event
+   *      and return true if the key event matches the trigger
+   *      and a 'char' property which represents the display of the trigger.
    */
   $.fn.atta = function(options) {
      var self = this
@@ -27,16 +37,14 @@ function ($) {
           , '#atta-list li { padding:5px 10px;font-weight:bold;border-bottom:1px solid #eee; color:#333; }'
           , '#atta-list li.sel { background:#1DCAFF; color:#fff; }' ]
       , completions = options.completions || defaults.completions
+      , at = options.at || defaults.at
       , newList = function (ta) {
           return $("<div id='atta-list-container'><div id='atta-list'><ul></ul></div></div>");
       }
       , newItem = function (name, i) {
           return '<li data-index="' + i + '" data-name="' + name + '" class="' + (i ? '' : 'sel') +'">' +
               name + '</li>';
-      }
-      , at = function (e) {
-          return String.fromCharCode(e.which || e.keyCode) === "2" && e.shiftKey;
-      }
+      }      
       , key = function(e, alias) {
           return (e.which || e.keyCode) === keys[alias];
       }
@@ -110,14 +118,14 @@ function ($) {
       return self.each(function() {          
           $(this).live('keyup', function (e) {
               var el = $(e.target);
-              if (at(e)) {
+              if (at.is(e)) {
                   showOptions(e.target);
               } else {
                   var container = $("#atta-list-container");
                   if (container.length > 0) {
                       var txt = el.val(), query, matching, filteredNames;
                       if (txt.length > 0) {
-                          var lastAt = txt.lastIndexOf('@');
+                          var lastAt = txt.lastIndexOf(at.char);
                           if (lastAt != -1) {
                               query = txt.slice(lastAt + 1, txt.length);
                               matching = function(i, e) {
