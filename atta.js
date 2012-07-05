@@ -136,8 +136,8 @@ function ($) {
       });
 
       // bind query listener
-      return self.each(function() {          
-          $(this).live('keyup', function (e) {
+      return self.each(function() {
+          var listen = function (e) {
               var el = $(e.target);
               if (at.is(e)) {
                   showCompletions(e.target, completions() || []);
@@ -160,6 +160,13 @@ function ($) {
                       }
                   }  
               }
+          }
+          , self = $(this);
+          self.focus(function() {
+              self.on('keyup', listen);
+          }).blur(function() {
+              cancel();
+              self.unbind('keyup', listen);
           });
       });
   };
