@@ -58,7 +58,7 @@ function ($) {
           return $("<div id='"+Selectors.container.slice(1)+"'><div id='atta-list'><ul></ul></div></div>");
       }
       , newItem = function (name, i) {
-          return '<li data-index="' + i + '" data-name="' + name + '" ' + (i ? '' : 'class="sel"') +'>' + name + '</li>';
+          return '<li data-index="i' + i + '" data-name="' + name + '" ' + (i ? '' : 'class="sel"') +'>' + name + '</li>';
       }      
       , key = function(e, alias) {
           return (e.which || e.keyCode) === keys[alias];
@@ -88,30 +88,39 @@ function ($) {
       }
       , navigationBound = false // todo better way to detect this
       , bindNavigation = function() {
-          navigationBound = true
+          navigationBound = true;
           $(window).on('keyup', function (e) {
-              var sel = $("#atta-list li" + Selectors.selected)
+              var sel = $("#atta-list " + Selectors.selected)
               , kids = $(sel.parent()).children()
               , cnt = kids.length
-              , index = sel.length > 0 && sel.data().index || 0;
-              if (cnt) {
-                  var selCls = Selectors.selected.slice(1);
+              , index = sel.length > 0 && parseInt(sel.data().index.slice(1), 10) || 0;
+              console.log('current selection')
+              console.log(sel);
+              if (cnt > -1) {
+                  var selCls = Selectors.selected.slice(1)
+                  , select = function(el) {
+                      el.addClass(selCls)
+                      console.log('selected '); console.log(el);
+                  }, unselect = function(el) {
+                      el.removeClass(selCls);
+                      console.log('unselected ' ); console.log(el);
+                  }
                   if (upKey(e)) {
                       e.preventDefault();
-                      sel.removeClass(selCls);
+                      unselect(sel);
                       if (index > 0) {
-                          $(kids[index-1]).addClass(selCls)
+                          select($(kids[index-1]));
                       } else if (index == 0) {
-                          $(kids[cnt-1]).addClass(selCls)
+                          select($(kids[cnt-1]));
                       }
                       return false;
                   } else if (downKey(e)) {
                       e.preventDefault();
-                      sel.removeClass(selCls);
+                      unselect(sel);
                       if (index < cnt-1) {
-                          $(kids[index+1]).addClass(selCls)
+                          select($(kids[index+1]));
                       } else if (index == cnt-1) {
-                          $(kids[0]).addClass(selCls)
+                          select($(kids[0]));
                       }
                       return false;
                   }
@@ -136,8 +145,7 @@ function ($) {
                   var container = $(Selectors.container);
                   if (container.length > 0) {
                       e.preventDefault();
-                      var sel = container.find(Selectors.selected)
-                      , name = sel.text();
+                      var name = container.find(Selectors.selected).data().name;
                       if (name.length > 0) {
                           var prev = target.val()
                           , next = prev.slice(0, prev.lastIndexOf(at.char) + 1) + name + ' ';
@@ -185,7 +193,7 @@ function ($) {
               self.unbind('keyup', listen);
               // give some time for the accept code
               // to get a handle on the selection
-              setTimeout(cancel, 400);
+              //setTimeout(cancel, 400);
           });
       });
   };
