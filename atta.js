@@ -19,6 +19,15 @@ function ($) {
           , char : '@'
       }
   };
+
+  var Selectors = {
+      container: '#atta-list-container',
+      selected :'.sel',
+      style: '#atta-style'
+  };
+
+  window['atta'] = {};
+
   /**
    * options is an object which may contain one of:
    * completions - a function which returns a list of completion options
@@ -38,19 +47,18 @@ function ($) {
           , 'tab': 9
       }
       , styles = [
-          '#atta-list-container { position:relative; top: 0px; left: 5px; }'
+          Selectors.continer + ' { position:relative; top: 0px; left: 5px; }'
           , '#atta-list { position:relative;margin-top:18px;background:#fff;border-radius:3px;border:1px solid #ddd;box-shadow:0 0 5px rgba(0,0,0,0.1);min-width:180px;}'
           , '#atta-list ul { list-style:none;margin:0;padding:0; }'
           , '#atta-list li { padding:5px 10px;font-weight:bold;border-bottom:1px solid #eee; color:#333; }'
-          , '#atta-list li.sel { background:#1DCAFF; color:#fff; }' ]
+          , '#atta-list li' + Selectors.selected + ' { background:#1DCAFF; color:#fff; }' ]
       , completions = options.completions || defaults.completions
       , at = options.at || defaults.at
       , newList = function () {
-          return $("<div id='atta-list-container'><div id='atta-list'><ul></ul></div></div>");
+          return $("<div id='"+Selectors.container.slice(1)+"'><div id='atta-list'><ul></ul></div></div>");
       }
       , newItem = function (name, i) {
-          return '<li data-index="' + i + '" data-name="' + name + '" class="' + (i ? '' : 'sel') +'">' +
-              name + '</li>';
+          return '<li data-index="' + i + '" data-name="' + name + '" ' + (i ? '' : 'class="sel"') +'>' + name + '</li>';
       }      
       , key = function(e, alias) {
           return (e.which || e.keyCode) === keys[alias];
@@ -61,7 +69,7 @@ function ($) {
       , downKey = function (e) { return key(e, 'down'); }
       , tabKey = function (e) { return key(e, 'tab'); }
       , buildMarkup = function (cs) {
-          var current = $("#atta-list-container")
+          var current = $(Selectors.container)
           , markup = current.length > 0 && current || newList()
           , ul = markup.find('ul')
           , buff = [];
@@ -72,7 +80,7 @@ function ($) {
           return markup;
       }
       , cancel = function() {
-          $('#atta-list-container').remove();
+          $(Selectors.container).remove();
       }
       , showCompletions = function (ta, cs) {
           var markup = buildMarkup(cs);
@@ -82,27 +90,28 @@ function ($) {
       , bindNavigation = function() {
           navigationBound = true
           $(window).on('keyup', function (e) {
-              var sel = $("#atta-list li.sel")
+              var sel = $("#atta-list li" + Selectors.selected)
               , kids = $(sel.parent()).children()
               , cnt = kids.length
               , index = sel.length > 0 && sel.data().index || 0;
-              if (cnt) {      
+              if (cnt) {
+                  var selCls = Selectors.selected.slice(1);
                   if (upKey(e)) {
                       e.preventDefault();
-                      sel.removeClass('sel');
+                      sel.removeClass(selCls);
                       if (index > 0) {
-                          $(kids[index-1]).addClass('sel')
+                          $(kids[index-1]).addClass(selCls)
                       } else if (index == 0) {
-                          $(kids[cnt-1]).addClass('sel')
+                          $(kids[cnt-1]).addClass(selCls)
                       }
                       return false;
                   } else if (downKey(e)) {
                       e.preventDefault();
-                      sel.removeClass('sel');
+                      sel.removeClass(selCls);
                       if (index < cnt-1) {
-                          $(kids[index+1]).addClass('sel')
+                          $(kids[index+1]).addClass(selCls)
                       } else if (index == cnt-1) {
-                          $(kids[0]).addClass('sel')
+                          $(kids[0]).addClass(selCls)
                       }
                       return false;
                   }
@@ -111,26 +120,32 @@ function ($) {
       };
 
       // append atta styles only once
-      if ($('#atta-style').length < 1) {
-          $('head').append('<style type="text/css" id="atta-style">' +
+      if ($(Selectors.style).length < 1) {
+          $('head').append('<style type="text/css" id="'+Selectors.style.slice(1)+'">' +
                            styles.join('') +
                            '</style>')
       }
 
-      // bind accept and cancelation listener
-      $(window).on('keyup', function(e) {
+      // bind one accept and cancelation listener
+      $(window).on('keydown', function(e) {
           if (cancelKey(e)) {
               cancel();
           } else if (acceptKey(e)) {
-              var container = $('#atta-list-container');
-              if (container.length > 0) {
-                  e.preventDefault();
-                  var focused = $("*:focus");
-                  console.log(focused);
-                  var name = container.find('.sel').text();
-                  console.log('select ' + name);
-                  cancel();
-                  return false;
+              var target = $(window.atta._target);
+              if (target) {
+                  var container = $(Selectors.container);
+                  if (container.length > 0) {
+                      e.preventDefault();
+                      var sel = container.find(Selectors.selected)
+                      , name = sel.text();
+                      if (name.length > 0) {
+                          var prev = target.val()
+                          , next = prev.slice(0, prev.lastIndexOf(at.char) + 1) + name + ' ';
+                          target.val(next);
+                          cancel();
+                      }
+                      return false;
+                  }
               }
           }
       });
@@ -144,8 +159,8 @@ function ($) {
                   if (!navigationBound) {
                       bindNavigation();
                   }
-              } else {
-                  var container = $("#atta-list-container");
+              } else if (!acceptKey(e)) {
+                  var container = $(Selectors.container);
                   if (container.length > 0) {
                       var txt = el.val(), query, matching;
                       if (txt.length > 0) {
@@ -163,10 +178,14 @@ function ($) {
           }
           , self = $(this);
           self.focus(function() {
+              // always maintain a handle on the last selected atta item
+              window.atta._target = self;
               self.on('keyup', listen);
           }).blur(function() {
-              cancel();
               self.unbind('keyup', listen);
+              // give some time for the accept code
+              // to get a handle on the selection
+              setTimeout(cancel, 400);
           });
       });
   };
