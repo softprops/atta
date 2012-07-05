@@ -1,4 +1,11 @@
 // http://www.quirksmode.org/js/keys.html
+/**
+ * atta(b completion)
+ * usage:
+ *   $(selector).atta({
+ *      completions: function () { return ['Foo', 'Bar', 'Baz' ] }
+ *   })
+ */
 function ($) {
   'use strict';
   var defaults = {
@@ -50,7 +57,7 @@ function ($) {
           return (e.which || e.keyCode) === keys[alias];
       }
       , cancelKey = function (e) { return key(e, 'escape'); }
-      , acceptKey = function (e) { return key(e, 'enter'); }
+      , acceptKey = function (e) { return key(e, 'enter') || key(e, 'tab'); }
       , upKey = function (e) { return key(e, 'up'); }
       , downKey = function (e) { return key(e, 'down'); }
       , tabKey = function (e) { return key(e, 'tab'); }
@@ -64,6 +71,9 @@ function ($) {
           }
           ul.empty().append(buff.join(''));
           return markup;
+      }
+      , cancel = function() {
+          $('#atta-list-container').remove();
       }
       , showCompletions = function (ta, cs) {
           var markup = buildMarkup(cs);
@@ -107,13 +117,14 @@ function ($) {
       // bind accept and cancelation listener
       $(window).on('keyup', function(e) {
           if (cancelKey(e)) {
-              $('#atta-list-container').remove();
+              cancel();
           } else if (acceptKey(e)) {
               var container = $('#atta-list-container');
               if (container.length > 0) {
                   e.preventDefault();
                   var name = container.find('.sel').text();
                   console.log('select ' + name);
+                  cancel();
                   return false;
               }
           }
