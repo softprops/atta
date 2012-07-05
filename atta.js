@@ -148,7 +148,7 @@ function ($) {
               } else {
                   var container = $("#atta-list-container");
                   if (container.length > 0) {
-                      var txt = el.val(), query, matching, filteredCompletions;
+                      var txt = el.val(), query, matching;
                       if (txt.length > 0) {
                           var lastAt = txt.lastIndexOf(at.char);
                           if (lastAt != -1) {
@@ -156,8 +156,7 @@ function ($) {
                               matching = function(i, e) {
                                   return e.toLowerCase().indexOf(query.toLowerCase()) != -1;
                               }
-                              filteredCompletions = (completions() || []).filter(matching);
-                              showCompletions(el, filteredCompletions);
+                              showCompletions(el, (completions() || []).filter(matching));
                           }
                       }
                   }  
