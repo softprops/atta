@@ -1,7 +1,19 @@
 // http://www.quirksmode.org/js/keys.html
 function ($) {
-  $.fn.atta = function() {
+  'use strict';
+  var defaults = {
+      completions: function() {
+          return $("#rsvp-list a.mem-name").
+              map(function (i, a) { return a.text; }).sort();
+      }
+  };
+  /**
+   * options is an object which may contain one of
+   * completions - a function which returns a list of completion options
+   */
+  $.fn.atta = function(options) {
      var self = this
+      , options = options || {}
       , keys = {
           'up':38
           , 'down':40
@@ -14,9 +26,7 @@ function ($) {
           , '#atta-list ul { list-style:none;margin:0;padding:0; }'
           , '#atta-list li { padding:5px 10px;font-weight:bold;border-bottom:1px solid #eee; color:#333; }'
           , '#atta-list li.sel { background:#1DCAFF; color:#fff; }' ]
-      , store = {
-          names: $("#rsvp-list a.mem-name").map(function (i, a) { return a.text; }).sort()
-      }
+      , completions = options.completions || defaults.completions
       , newList = function (ta) {
           return $("<div id='atta-list-container'><div id='atta-list'><ul></ul></div></div>");
       }
@@ -37,10 +47,10 @@ function ($) {
       , showOptions = function (ta) {
           var current = $("#atta-list-container")
           , markup = current.length > 0 && current || newList(ta)
-          , ns = store.names
+          , cs = (completions() || [])
           , buff = [];
-          for(var i = 0, l = ns.length;i < l;i++) {
-              buff.push(newItem(ns[i], i));
+          for(var i = 0, l = cs.length;i < l;i++) {
+              buff.push(newItem(cs[i], i));
           }
           var l = markup.find('ul')
           l.empty().append(buff.join(''));
@@ -111,11 +121,11 @@ function ($) {
                           if (lastAt != -1) {
                               query = txt.slice(lastAt + 1, txt.length);
                               matching = function(i, e) {
-                                  return e.indexOf(query) != -1;
+                                  return e.toLowerCase().indexOf(query.toLowerCase()) != -1;
                               }
-                              filteredNames = store.names.filter(matching);
+                              filteredCompletions = (completions() || []).filter(matching);
                               console.log('filtered names matching ' + query);
-                              console.log(filteredNames);
+                              console.log(filteredCompletions);
                           }
                       }
                   }  
