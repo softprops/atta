@@ -65,8 +65,8 @@ function ($) {
           ul.empty().append(buff.join(''));
           return markup;
       }
-      , showOptions = function (ta) {
-          var markup = buildMarkup(completions() || []);
+      , showCompletions = function (ta, cs) {
+          var markup = buildMarkup(cs);
           $(window).on('keyup', function (e) {
               var sel = $("#atta-list li.sel")
               , kids = $(sel.parent()).children()
@@ -124,7 +124,7 @@ function ($) {
           $(this).live('keyup', function (e) {
               var el = $(e.target);
               if (at.is(e)) {
-                  showOptions(e.target);
+                  showCompletions(e.target, completions() || []);
               } else {
                   var container = $("#atta-list-container");
                   if (container.length > 0) {
@@ -137,8 +137,7 @@ function ($) {
                                   return e.toLowerCase().indexOf(query.toLowerCase()) != -1;
                               }
                               filteredCompletions = (completions() || []).filter(matching);
-                              console.log('filtered names matching ' + query);
-                              console.log(filteredCompletions);
+                              showCompletions(el, filteredCompletions);
                           }
                       }
                   }  
