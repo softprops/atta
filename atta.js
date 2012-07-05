@@ -77,6 +77,11 @@ function ($) {
       }
       , showCompletions = function (ta, cs) {
           var markup = buildMarkup(cs);
+          $(ta).parent().append(markup);
+      }
+      , navigationBound = false // todo better way to detect this
+      , bindNavigation = function() {
+          navigationBound = true
           $(window).on('keyup', function (e) {
               var sel = $("#atta-list li.sel")
               , kids = $(sel.parent()).children()
@@ -104,7 +109,6 @@ function ($) {
                   }
               }
           });
-          $(ta).parent().append(markup);
       };
 
       // append atta styles only once
@@ -138,6 +142,9 @@ function ($) {
               var el = $(e.target);
               if (at.is(e)) {
                   showCompletions(e.target, completions() || []);
+                  if (!navigationBound) {
+                      bindNavigation();
+                  }
               } else {
                   var container = $("#atta-list-container");
                   if (container.length > 0) {
