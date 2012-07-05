@@ -83,27 +83,29 @@ function ($) {
           $(Selectors.container).remove();
       }
       , showCompletions = function (ta, cs) {
-          var markup = buildMarkup(cs);
-          $(ta).parent().append(markup);
+          $(ta).parent().append(buildMarkup(cs));
       }
       , navigationBound = false // todo better way to detect this
+      , currentSelection = function(){
+          return $('#atta-list ' + Selectors.selected);
+      }
+      , navKey = function(e) {
+          return upKey(e) || downKey(e);
+      }
       , bindNavigation = function() {
           navigationBound = true;
           $(window).on('keyup', function (e) {
-              var sel = $("#atta-list " + Selectors.selected)
+              var sel = currentSelection()
               , kids = $(sel.parent()).children()
               , cnt = kids.length
               , index = sel.length > 0 && parseInt(sel.data().index.slice(1), 10) || 0;
-              console.log('current selection')
-              console.log(sel);
               if (cnt > -1) {
                   var selCls = Selectors.selected.slice(1)
                   , select = function(el) {
                       el.addClass(selCls)
-                      console.log('selected '); console.log(el);
-                  }, unselect = function(el) {
+                  }
+                  , unselect = function(el) {
                       el.removeClass(selCls);
-                      console.log('unselected ' ); console.log(el);
                   }
                   if (upKey(e)) {
                       e.preventDefault();
@@ -167,7 +169,7 @@ function ($) {
                   if (!navigationBound) {
                       bindNavigation();
                   }
-              } else if (!acceptKey(e)) {
+              } else if (!acceptKey(e) && !navKey(e)) {
                   var container = $(Selectors.container);
                   if (container.length > 0) {
                       var txt = el.val(), query, matching;
@@ -193,7 +195,7 @@ function ($) {
               self.unbind('keyup', listen);
               // give some time for the accept code
               // to get a handle on the selection
-              //setTimeout(cancel, 400);
+              setTimeout(cancel, 400);
           });
       });
   };
