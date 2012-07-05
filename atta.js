@@ -121,9 +121,9 @@ function ($) {
           } else if (acceptKey(e)) {
               var container = $('#atta-list-container');
               if (container.length > 0) {
+                  e.preventDefault();
                   var focused = $("*:focus");
                   console.log(focused);
-                  e.preventDefault();
                   var name = container.find('.sel').text();
                   console.log('select ' + name);
                   cancel();
