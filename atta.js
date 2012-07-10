@@ -1,11 +1,11 @@
 /**
- * atta(b completion)
- * usage:
- *   $(selector).atta({
- *      completions: function () { return ['Foo', 'Bar', 'Baz' ] }
- *   })
+ *  atta(b completion)
+ *  usage:
+ *      $(selector).atta({
+ *        completions: function () { return ['Foo', 'Bar', 'Baz' ] }
+ *      })
  */
-function ($) {
+(function ($) {
   'use strict';
   var defaults = {
       completions: function() {
@@ -14,9 +14,9 @@ function ($) {
       },
       at : {
           is: function(e){
-              return  String.fromCharCode(e.which || e.keyCode) === "2" && e.shiftKey
+              return  String.fromCharCode(e.which || e.keyCode) === "2" && e.shiftKey;
           }
-          , char : '@'
+          , character : '@'
       }
   };
 
@@ -34,7 +34,7 @@ function ($) {
    * at - an object representing the at trigger for tab completion.
    *      this object should contain a function, 'is', which should accept a key event
    *      and return true if the key event matches the trigger
-   *      and a 'char' property which represents the display of the trigger.
+   *      and a 'character' property which represents the display of the trigger.
    */
   $.fn.atta = function(options) {
      var self = this
@@ -45,9 +45,10 @@ function ($) {
           , 'escape': 27
           , 'enter': 13
           , 'tab': 9
+          , 'delete': 8
       }
       , styles = [
-          Selectors.continer + ' { position:relative; top: 0px; left: 5px; }'
+          Selectors.container + ' { position:relative; top: 0px; left: 5px; }'
           , '#atta-list { position:relative;margin-top:18px;background:#fff;border-radius:3px;border:1px solid #ddd;box-shadow:0 0 5px rgba(0,0,0,0.1);min-width:180px;}'
           , '#atta-list ul { list-style:none;margin:0;padding:0; }'
           , '#atta-list li { padding:5px 10px;font-weight:bold;border-bottom:1px solid #eee; color:#333; }'
@@ -68,6 +69,7 @@ function ($) {
       , upKey = function (e) { return key(e, 'up'); }
       , downKey = function (e) { return key(e, 'down'); }
       , tabKey = function (e) { return key(e, 'tab'); }
+      , deleteKey = function(e) { return key(e, 'delete'); }
       , buildMarkup = function (cs) {
           var current = $(Selectors.container)
           , markup = current.length > 0 && current || newList()
@@ -106,7 +108,7 @@ function ($) {
                   }
                   , unselect = function(el) {
                       el.removeClass(selCls);
-                  }
+                  };
                   if (upKey(e)) {
                       e.preventDefault();
                       unselect(sel);
@@ -127,6 +129,7 @@ function ($) {
                       return false;
                   }
               }
+              return true;
           });
       };
 
@@ -134,7 +137,7 @@ function ($) {
       if ($(Selectors.style).length < 1) {
           $('head').append('<style type="text/css" id="'+Selectors.style.slice(1)+'">' +
                            styles.join('') +
-                           '</style>')
+                           '</style>');
       }
 
       // bind one accept and cancelation listener
@@ -150,7 +153,7 @@ function ($) {
                       var name = container.find(Selectors.selected).data().name;
                       if (name.length > 0) {
                           var prev = target.val()
-                          , next = prev.slice(0, prev.lastIndexOf(at.char) + 1) + name + ' ';
+                          , next = prev.slice(0, prev.lastIndexOf(at.character) + 1) + name + ' ';
                           target.val(next);
                           cancel();
                       }
@@ -158,6 +161,7 @@ function ($) {
                   }
               }
           }
+          return true;
       });
 
       // bind query listener
@@ -165,6 +169,7 @@ function ($) {
           var listen = function (e) {
               var el = $(e.target);
               if (at.is(e)) {
+                  window.atta._last_at = el.val().lastIndexOf(at.character);
                   showCompletions(e.target, completions() || []);
                   if (!navigationBound) {
                       bindNavigation();
@@ -174,16 +179,21 @@ function ($) {
                   if (container.length > 0) {
                       var txt = el.val(), query, matching;
                       if (txt.length > 0) {
-                          var lastAt = txt.lastIndexOf(at.char);
+                          var lastAt = txt.lastIndexOf(at.character);
                           if (lastAt != -1) {
                               query = txt.slice(lastAt + 1, txt.length);
                               matching = function(i, e) {
                                   return e.toLowerCase().indexOf(query.toLowerCase()) != -1;
-                              }
+                              };
                               showCompletions(el, (completions() || []).filter(matching));
                           }
                       }
-                  }  
+                  }
+                  if(deleteKey(e)) {
+                      if (window.atta._last_at >= el.val().length) {
+                          cancel();
+                      }
+                  }
               }
           }
           , self = $(this);
@@ -199,4 +209,4 @@ function ($) {
           });
       });
   };
-)(jQuery);
+})(jQuery);
