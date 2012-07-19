@@ -9,7 +9,7 @@
   'use strict';
   var defaults = {
       completions: function() {
-          return $("#rsvp-list a.mem-name").
+          return $(".event-attendees h5 a").
               map(function (i, a) { return a.text; }).sort();
       },
       at : {
@@ -48,7 +48,7 @@
           , 'delete': 8
       }
       , styles = [
-          Selectors.container + ' { position:relative; top: 0px; left: 5px; }'
+          Selectors.container + ' { position:relative; top: -30px; left: 5px; }'
           , '#atta-list { position:relative;margin-top:18px;background:#fff;border-radius:3px;border:1px solid #ddd;box-shadow:0 0 5px rgba(0,0,0,0.1);min-width:180px;}'
           , '#atta-list ul { list-style:none;margin:0;padding:0; }'
           , '#atta-list li { padding:5px 10px;font-weight:bold;border-bottom:1px solid #eee; color:#333; }'
@@ -104,7 +104,7 @@
               if (cnt > -1) {
                   var selCls = Selectors.selected.slice(1)
                   , select = function(el) {
-                      el.addClass(selCls)
+                      el.addClass(selCls);
                   }
                   , unselect = function(el) {
                       el.removeClass(selCls);
@@ -131,6 +131,45 @@
               }
               return true;
           });
+      }
+      , choose = function(e) {
+        var target = $(window.atta._target);
+        if (target) {
+          var container = $(Selectors.container);
+          if (container.length > 0) {
+            e.preventDefault();
+            var name = container.find(Selectors.selected).data().name;
+            if (name.length > 0) {
+              var prev = target.val()
+              , next = prev.slice(0, prev.lastIndexOf(at.character) + 1) + name + ' ';
+              target.val(next);
+              cancel();
+            }
+            return false;
+          }
+        }
+        return true;
+      }
+      , bindMouseSelection = function() {
+        var l = $('#atta-list li')
+          , selCls = Selectors.selected.slice(1)
+          , select = function(el) {
+              el.addClass(selCls);
+          }
+          , unselect = function(el) {
+              el.removeClass(selCls);
+          };
+        if (l.length > 0) {
+          l.on('mouseenter', function(e) {
+            var selected = currentSelection();
+            if (selected.length > 0) {
+              unselect(selected);
+              select($(this));
+            }
+         }).on('click', function(e) {
+            return choose(e);
+         });
+        }
       };
 
       // append atta styles only once
@@ -145,21 +184,7 @@
           if (cancelKey(e)) {
               cancel();
           } else if (acceptKey(e)) {
-              var target = $(window.atta._target);
-              if (target) {
-                  var container = $(Selectors.container);
-                  if (container.length > 0) {
-                      e.preventDefault();
-                      var name = container.find(Selectors.selected).data().name;
-                      if (name.length > 0) {
-                          var prev = target.val()
-                          , next = prev.slice(0, prev.lastIndexOf(at.character) + 1) + name + ' ';
-                          target.val(next);
-                          cancel();
-                      }
-                      return false;
-                  }
-              }
+              return choose(e);
           }
           return true;
       });
@@ -174,6 +199,7 @@
                   if (!navigationBound) {
                       bindNavigation();
                   }
+                  bindMouseSelection();
               } else if (!acceptKey(e) && !navKey(e)) {
                   var container = $(Selectors.container);
                   if (container.length > 0) {
@@ -186,6 +212,7 @@
                                   return e.toLowerCase().indexOf(query.toLowerCase()) != -1;
                               };
                               showCompletions(el, (completions() || []).filter(matching));
+                              bindMouseSelection();
                           }
                       }
                   }
