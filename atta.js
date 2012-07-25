@@ -8,9 +8,18 @@
 (function ($) {
   'use strict';
   var defaults = {
+      // list of completion objects to match against
       completions: function() {
           return $(".event-attendees h5 a").
               map(function (i, a) { return a.text; }).sort();
+      },
+      // matcher function which given a text query, should
+      // return a function that takes an index i and element e (completion object)
+      // which returns true when matched.
+      matcher: function(query) {
+          return function(i, e) {
+              return e.toLowerCase().indexOf(query.toLowerCase()) != -1;
+          };
       },
       at : {
           is: function(e){
@@ -55,6 +64,7 @@
           , '#atta-list li' + Selectors.selected + ' { background:#1DCAFF; color:#fff; }' ]
       , completions = options.completions || defaults.completions
       , at = options.at || defaults.at
+      , matcher = options.matcher || defaults.matcher
       , newList = function () {
           return $("<div id='"+Selectors.container.slice(1)+"'><div id='atta-list'><ul></ul></div></div>");
       }
@@ -208,10 +218,7 @@
                           var lastAt = txt.lastIndexOf(at.character);
                           if (lastAt != -1) {
                               query = txt.slice(lastAt + 1, txt.length);
-                              matching = function(i, e) {
-                                  return e.toLowerCase().indexOf(query.toLowerCase()) != -1;
-                              };
-                              showCompletions(el, (completions() || []).filter(matching));
+                              showCompletions(el, (completions() || []).filter(matcher(query)));
                               bindMouseSelection();
                           }
                       }
